@@ -17,7 +17,7 @@ mu_1 = mu*(1-exp(-mu))/(1-exp(-mu)-mu*exp(-mu));
 global mu_2;
 mu_2 = mu/(1+mu);
 global lambda;
-lambda = 1/4.5; %rate of poisson process arrivals in single queue
+lambda = 1/4; %rate of poisson process arrivals in single queue
 global lambda_1;
 lambda_1 = lambda*(1-exp(-mu)); %rate of poisson process for Type1
 global lambda_2;
@@ -27,7 +27,7 @@ P_1 = 2/60; %parking price for Type1 users
 global P_2;
 P_2 = 3/60; %parking price for Type2 users
 global P_w;
-P_w = 20/60; %price for waiting in the queue
+P_w = 30/60; %price for waiting in the queue
 global R;
 R = 75; %reward for parking
 global rho;
@@ -136,11 +136,11 @@ global P_w;
 global P_2;
 global mu;
 global c;
-if k<c
-    beta = R - P_2/mu;
-else
+%if k<c
+%    beta = R - P_2/mu;
+%else
     beta = R - (P_w*(k-c+1))/(c*mu) - P_2/mu ;%beta = R - (P_w*(k+1))/(c*mu) - P_2/mu ;
-end
+%end
 end
 
 function beta_1 = findbeta_1(k) %expected utility of a Type1 user who enters the system in state k
