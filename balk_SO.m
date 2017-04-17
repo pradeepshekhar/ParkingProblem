@@ -2,7 +2,7 @@
 % different types of users.
 % c1 spots for Type1 users (those with parking time < 1hr)
 % c2 spots for Type2 users (those with parking time > 1hr)
-% All prices are in $/min
+% All prices are in $/hr
 %Defing all the parameters required to find social utility
 global c;
 c=30; %total no. of parking spots
@@ -23,9 +23,9 @@ lambda_1 = lambda*(1-exp(-mu)); %rate of poisson process for Type1
 global lambda_2;
 lambda_2 = lambda*exp(-mu); %rate of poisson process for Type2
 global P_1;
-P_1 = 2; %parking price for Type1 users (per hr)
+P_1 = 2; %parking price for Type1 users 
 global P_2;
-P_2 = 3; %parking price for Type2 users
+P_2 = 5; %parking price for Type2 users
 global P_w;
 P_w = 30; %price for waiting in the queue
 global R;
@@ -40,13 +40,13 @@ n_b1 = floor((R*mu_1*c_1 + P_w*c_1 - P_1*c_1)/P_w); %balking level of type1 user
 n_b2 = floor((R*mu_2*c_2 + P_w*c_2 - P_2*c_2)/P_w); %balking level of type2 users
 n_b = floor((R*mu*c + P_w*c - P_2*c)/P_w); %balking level in single pricing model assuming the price to be P_2
 
-global n;
-n = 90;
+global n; %max number of customers in the system
+n = 60;
 
 utility = zeros(1,n);
 utility_1 = zeros(1,n);
 utility_2 = zeros(1,n);
-%ex2 = findutility_n(5); %defined for testing puposes
+
 for i=1:n
     utility(i) = findutility_n(i);
     utility_1(i) = findutility_n_1(i);
@@ -90,6 +90,13 @@ for i=1:n+1
     beta_k_n(i) = findbeta(i-1);
 end
 for k=0:n-1
+    %{
+    sigma_beta = 0;
+    for l=0:k
+        sigma_beta = sigma_beta + beta_k_n(l+1);
+    end
+    sigma_total = sigma_total + (p_k_n(k+1)*sigma_beta);
+    %}
     sigma_total = sigma_total + (p_k_n(k+1)*beta_k_n(k+1));
 end
 utility_n = lambda*sigma_total;
