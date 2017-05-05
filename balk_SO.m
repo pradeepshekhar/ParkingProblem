@@ -96,24 +96,12 @@ P_1 = floor((R*mu_1*c_1 +P_w*c_1-n_so_1*P_w)/c_1);
 n_b = floor((R*mu*c + P_w*c - P*c)/P_w);
 n_b1 = floor((R*mu_1*c_1 + P_w*c_1 - P_1*c_1)/P_w); %new balking level with adjusted price
 
-%fiding delta
-p_k_n_1 = zeros(1,n_b1+1);
-d_k_n_1 = zeros(1,n_b1+1);
-d_k_total_1 = 0;
-for i=1:n_b1+1
-    d_k_n_1(i) = findd_k(user1,i-1);
-    d_k_total_1 = d_k_total_1 + d_k_n_1(i);
-end
-for i=1:n_b1+1
-    p_k_n_1(i) = d_k_n_1(i)/d_k_total_1;
-end
-delta = p_k_n_1(n_b1+1);
-
+global nhat;
+nhat=1;
 global n2;
 n2= 21; %desired n2
 global n1;
 n1=1;
-
 %Implementation of "Iterative price selection"
 for z=1:5
 
