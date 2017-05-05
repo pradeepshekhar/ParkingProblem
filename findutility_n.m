@@ -1,3 +1,4 @@
+%Function to find Utilities of Single priced queue and Queue 1
 function utility_n = findutility_n(type,n) %function to find total expected utility per unit time obtained by the customers in the system
 global lambda;
 global lambda_1;

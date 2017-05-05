@@ -15,6 +15,6 @@ elseif type==1
     else
         d_k = ((rho_1*c_1)^c_1)*(rho_1^(k-c_1))/factorial(c_1);
     end    
-else %type2
+else %type2-hard to implement here because it requires extra input parameters compared to others
 end
 end

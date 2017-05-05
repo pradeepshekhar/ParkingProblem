@@ -13,9 +13,9 @@ user2 = 2;
 global c;
 c=30; %total no. of parking spots
 global c_1;
-c_1 = 8;
+c_1 = 10;
 global c_2;
-c_2 = 22;
+c_2 = 20;
 global mu;
 mu = 1/2; % 1/2 used in paper %service time parameter for single queue scenario
 global T; %mean service time of users
@@ -45,7 +45,7 @@ rho = lambda/(c*mu); %traffic intensity of single queue
 global rho_1;
 rho_1 = lambda_1/(c_1*mu_1); %traffic intensity of Type1 queue
 global rho_2;
-rho_2 = lambda_2/(c_2*mu_2); %traffic intensity of Type1 queue
+rho_2 = lambda_2/(c_2*mu_2); %traffic intensity of Type2 queue
 global delta;
 delta=0.0553; %0.0032; %0.1 %changing it to p_nb1(nb1) 
 global gamma;
@@ -65,14 +65,6 @@ n_b = floor((R*mu*c + P_w*c - P*c)/P_w); %balking level in single pricing model 
 global n; %max number of customers in the system %%for simulation purposes
 n = 120;
 
-%Defining the acceptance rates
-global kappa; %acceptance rate for type 1 cars arriving at queue 2
-global zeta; %acceptance rate for type 2 cars arriving at queue 2
-global psi; %overall acceptance rate for cars arriving at queue 2
-%Assigning some initial values to start with
-kappa =0;
-zeta=0.8;
-psi=0;
 utility = zeros(1,n); % array to store single price utility for different values of n
 utility_1 = zeros(1,n); %array to store queue-1 utility for different values of n
 %utility_2 = zeros(1,n);
@@ -96,14 +88,25 @@ P_1 = floor((R*mu_1*c_1 +P_w*c_1-n_so_1*P_w)/c_1);
 n_b = floor((R*mu*c + P_w*c - P*c)/P_w);
 n_b1 = floor((R*mu_1*c_1 + P_w*c_1 - P_1*c_1)/P_w); %new balking level with adjusted price
 
-global nhat;
-nhat=1;
+%Defining the acceptance rates
+global kappa; %acceptance rate for type 1 cars arriving at queue 2
+global zeta; %acceptance rate for type 2 cars arriving at queue 2
+global psi; %overall acceptance rate for cars arriving at queue 2
+%Assigning some initial values to start with
+kappa =0;
+zeta=0.8;
+psi=0;
+
+global n_hat;
+n_hat=16;
 global n2;
-n2= 21; %desired n2
+n2= 19; %desired n2
 global n1;
 n1=1;
+delta = finddelta(n_hat);
+lambda_tilda = delta*lambda_1 + lambda_2;
 %Implementation of "Iterative price selection"
-for z=1:5
+for z=1:10
 
     mu_tilda = gamma*mu_1+(1-gamma)*mu_2;
     P_2= (R*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - n2*P_w*mu_2 )/(mu_tilda*c_2);
@@ -115,6 +118,17 @@ for z=1:5
     disp(gamma);
 end
 
+%total utility
+utility_total = findutility_n(user1,n_hat);
+%disp(utility_total);
+p_k_n_2=findp_k_n_2(n1,n2,mu_tilda);
+for i=1:n2+1
+    utility_total=utility_total+(lambda_tilda)*(p_k_n_2(i))*(findalpha(user2,i-1)); 
+end
+for i=n2+2:n1+1
+    utility_total=utility_total+(delta*lambda_1)*(p_k_n_2(i))*(findalpha(user1,i-1));
+end
+%{
 figure(1);
 bar(utility);
 title('Total expected utility vs n');
@@ -124,11 +138,6 @@ figure(2);
 bar(utility_1);
 title('Total expected utility of Type1 users vs n');
 ylabel('utility1');
-%{
-figure(3);
-bar(utility_2);
-title('Total expected utility of Type2 users vs n');
-ylabel('utility2');
 
 function utility_n_2 = findutility_n_2(n) %Implement this in findutility_n.m
 
