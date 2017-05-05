@@ -4,7 +4,7 @@
 % c2 spots for Type2 users (those with parking time > 1hr)
 % All prices are in $/hr
 %Defing all the parameters required to find social utility
-global user0;
+global user0; %variable defining the type of user - used when calling functions
 user0 = 0;
 global user1;
 user1 = 1;
@@ -82,25 +82,6 @@ for i=1:n
     utility_1(i) = findutility_n(user1,i);
     %utility_2(i) = findutility_n_2(i);
 end
-
-global n2;
-n2= 21; %desired n2
-global n1;
-n1=1;
-
-%Implementation of "Iterative price selection"
-for z=1:5
-
-    mu_tilda = gamma*mu_1+(1-gamma)*mu_2;
-    P_2= floor((R*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - n2*P_w*mu_2 )/(mu_tilda*c_2));
-    n1 = floor((R*mu_1*mu_tilda*c_2 + P_w*c_2*mu_1 - P_2*mu_tilda*c_2)/(P_w*mu_1));
-    gamma = findgamma(n1,n2,mu_tilda);
-    disp(mu_tilda);
-    disp(P_2);
-    disp(n1);
-    disp(gamma);
-end
-
 [U_sw,f] = max(utility);
 [U_sw_1,g] = max(utility_1);
 %[U_sw_2,h] = max(utility_2);
@@ -108,13 +89,13 @@ n_so=f-1;
 n_so_1=g-1;
 %n_so_2=h-1;
 %U_sw_new = U_sw_1+U_sw_2;
-%U_sw_user = U_sw/n_so;
-%U_sw_new_user = U_sw_new/(n_so_1+n_so_2);
-
 
 %Change P,P_1 to get n_b1=n_so_1 and n_b=n_so
+P = floor((R*mu*c +P_w*c-n_so*P_w)/c);
 P_1 = floor((R*mu_1*c_1 +P_w*c_1-n_so_1*P_w)/c_1);
+n_b = floor((R*mu*c + P_w*c - P*c)/P_w);
 n_b1 = floor((R*mu_1*c_1 + P_w*c_1 - P_1*c_1)/P_w); %new balking level with adjusted price
+
 %fiding delta
 p_k_n_1 = zeros(1,n_b1+1);
 d_k_n_1 = zeros(1,n_b1+1);
@@ -128,7 +109,24 @@ for i=1:n_b1+1
 end
 delta = p_k_n_1(n_b1+1);
 
-%{
+global n2;
+n2= 21; %desired n2
+global n1;
+n1=1;
+
+%Implementation of "Iterative price selection"
+for z=1:5
+
+    mu_tilda = gamma*mu_1+(1-gamma)*mu_2;
+    P_2= (R*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - n2*P_w*mu_2 )/(mu_tilda*c_2);
+    n1 = floor((R*mu_1*mu_tilda*c_2 + P_w*c_2*mu_1 - P_2*mu_tilda*c_2)/(P_w*mu_1));
+    gamma = findgamma(n1,n2,mu_tilda);
+    disp(mu_tilda);
+    disp(P_2);
+    disp(n1);
+    disp(gamma);
+end
+
 figure(1);
 bar(utility);
 title('Total expected utility vs n');
@@ -138,42 +136,12 @@ figure(2);
 bar(utility_1);
 title('Total expected utility of Type1 users vs n');
 ylabel('utility1');
-
+%{
 figure(3);
 bar(utility_2);
 title('Total expected utility of Type2 users vs n');
 ylabel('utility2');
+
+function utility_n_2 = findutility_n_2(n) %Implement this in findutility_n.m
+
 %}
-
-
-%{
-function utility_n_2 = findutility_n_2(n) %function to find total expected utility per unit time obtained by the customers in the system
-global lambda_2;
-global user2;
-p_k_n_2 = zeros(1,n+1);
-d_k_n_2 = zeros(1,n+1);
-alpha_k_n_2 = zeros(1,n+1);
-d_k_total_2 = 0;
-sigma_total_2 = 0;
-for i=1:n+1
-    d_k_n_2(i) = findd_k(user2,i-1);
-    d_k_total_2 = d_k_total_2 + d_k_n_2(i);
-end
-for i=1:n+1
-    p_k_n_2(i) = d_k_n_2(i)/d_k_total_2;
-end
-for i=1:n+1
-    alpha_k_n_2(i) = findalpha(user2,i-1);
-end
-for k=0:n-1
-    sigma_total_2 = sigma_total_2 + (p_k_n_2(k+1)*alpha_k_n_2(k+1));
-end
-utility_n_2 = lambda_2*sigma_total_2;
-end
-%}
-
-
-
-
-
-
