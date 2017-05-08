@@ -1,10 +1,10 @@
 %Fuction for finding the stationary distribution of Queue 2
-function p_k_n_2 = findp_k_n_2(n1,n2,mu_tilda)
+function p_k_n_2 = findp_k_n_2(n1, n2, mu_tilda, delta, lambda_1, lambda_2, c_2)
 p_k_n_2=zeros(1,n1+1);
 d_k_2=zeros(1,n1+1);
 D_n_2=0;
 for i=1:n1+1
-    d_k_2(i) = findd_k_2(i-1,n2,mu_tilda);
+    d_k_2(i) = findd_k_2(i-1,n2,mu_tilda, delta, lambda_1, lambda_2, c_2);
     D_n_2 = D_n_2+d_k_2(i);
 end
 for i=1:n1+1
@@ -12,13 +12,11 @@ for i=1:n1+1
 end
 end
 
-function d_k_2 = findd_k_2(k,n2,mu_tilda)
-global delta;
-global lambda_tilda;
-global lambda_2;
-global c_2;
+function d_k_2 = findd_k_2(k, n2, mu_tilda, delta, lambda_1, lambda_2, c_2)
+
+lambda_tilda = delta*lambda_1 + lambda_2;
 rho_tilda=lambda_tilda/(c_2*mu_tilda);
-rho_hat = (delta*lambda_2)/(c_2*mu_tilda);
+rho_hat = (delta*lambda_1)/(c_2*mu_tilda);
 if k<c_2
     d_k_2 = ((rho_tilda*c_2)^k)/factorial(k);
 elseif k<n2
