@@ -1,10 +1,6 @@
 %Function to find Utilities of Single priced queue and Queue 1
 function utility_n = findutility_n(n, user_params, lot_params) 
-% function to find total expected utility per unit time obtained by the
-% customers in the system
-
 lambda = user_params.arrival_rate;
-
 
 % Initialize the variables we'll need
 p_k_n = zeros(1,n+1);

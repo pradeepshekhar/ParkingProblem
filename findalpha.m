@@ -1,14 +1,12 @@
+%Expected utility of a user who enters the system in state k, excluding 
+%the price of parking (for Single priced queue and Queue 1)
 function alpha = findalpha(k, user_params, lot_params) 
-% expected utility of a user who enters the system in state k, not counting
-% the price of parking
 
 c = lot_params.num_spots;
 R = user_params.reward;
 P_w = user_params.waiting_cost;
 mu = user_params.departure_rate;
 
-%if k==0 %  Note(DL): Why??
-%    alpha = 0;
 if k<c
     alpha = R ;%- P/mu;
 else
