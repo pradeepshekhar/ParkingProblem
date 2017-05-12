@@ -35,7 +35,7 @@ rho = lambda/(c*mu);
 rho_1 = lambda_1/(c_1*mu_1); 
 
 %single queue initial parking price 
-%not required as we are determining based on optimality later
+%not required as it is determined based on optimality later
 P = 0;
 
 % parking price for lots 1 and 2 (note: per hour?)
@@ -47,8 +47,8 @@ P_w = 48;
 
 % Reward for parking: single queue, Type1 and Type2
 R = 75;
-R_1 = R*lambda*(mu_2)/(lambda_1*mu_2+lambda_2*mu_1);
-R_2 = R*lambda*(mu_1)/(lambda_1*mu_2+lambda_2*mu_1);
+R_1 = R*lambda*(mu_2)/(lambda_1*mu_2+lambda_2*mu_1); % 75;
+R_2 = R*lambda*(mu_1)/(lambda_1*mu_2+lambda_2*mu_1); % 75;
 
 % Create for indexing structures
 type_1_idx = 1;
@@ -94,11 +94,11 @@ rho_hat = delta*lambda_1/(c_2*mu_tilda);
 
 
 %balking level of type1 users
-n_b1 = floor((R*mu_1*c_1 + P_w*c_1 - P_1*c_1)/P_w); 
+%n_b1 = floor((R*mu_1*c_1 + P_w*c_1 - P_1*c_1)/P_w); 
 %balking level of type2 users
 n_b2 = floor((R*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - P_2*mu_tilda*c_2)/(P_w*mu_2));
 %balking level in single pricing model
-n_b = floor((R*mu*c + P_w*c - P*c)/P_w); 
+%n_b = floor((R*mu*c + P_w*c - P*c)/P_w); 
 
 %max number of customers in the system (for simulation purposes)
 n_max = 60; 
@@ -140,17 +140,18 @@ n2=0;
 n_hat_start = 1;
 n2_start = 1;
 n_hat_range = 25;
-n2_range = 30;
+n2_range = 25;
 
 %Matrix to store uitilities for all options of (n_hat,n2)
-utility_total = zeros(n_hat_range,n2_range);
-P_2 = zeros(n_hat_range,n2_range);
+utility_total = zeros(n_hat_range+1,n2_range+1);
+P_2 = zeros(n_hat_range+1,n2_range+1);
+n1 = zeros(n_hat_range+1,n2_range+1);
 
 %Cycling through different pairs of (n_hat,n2) and finding utility
-for n_hat=n_hat_start:n_hat_start+n_hat_range-1
-    for n2=n2_start:n2_start+n2_range-1
+for n_hat=n_hat_start:n_hat_start+n_hat_range
+    for n2=n2_start:n2_start+n2_range
         % resulting balking level of type 1 users at lot 2 (initial guess)
-        n1=5;
+        n1(n_hat-n_hat_start+1,n2-n2_start+1)=5;
 
         %Delta found using n_hat
         delta = finddelta(n_hat, users(type_1_idx), lots(lot_1_idx));
@@ -165,9 +166,9 @@ for n_hat=n_hat_start:n_hat_start+n_hat_range-1
             mu_tilda = (mu_1*mu_2)/(gamma*mu_2 + (1-gamma)*mu_1);
             P_2(n_hat-n_hat_start+1,n2-n2_start+1) = (R_2*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - n2*P_w*mu_2 )/(mu_tilda*c_2);
             %note: is n1 formulation correct? Observed n1<n2.. so no gain in utility!
-            n1 = floor((R_1*mu_1*c_2 + P_w*c_2 - (P_2(n_hat-n_hat_start+1,n2-n2_start+1))*c_2)/(P_w));
-            %n1 = floor((R_1*mu_1*mu_tilda*c_2 + P_w*c_2*mu_1 - (P_2(n_hat-n_hat_start+1,n2-n2_start+1))*mu_tilda*c_2)/(P_w*mu_1));
-            [gamma, kappa, zeta] = findgamma(n1, n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
+            n1(n_hat-n_hat_start+1,n2-n2_start+1) = floor((R_1*mu_1*c_2 + P_w*c_2 - (P_2(n_hat-n_hat_start+1,n2-n2_start+1))*c_2)/(P_w));
+            %n1(n_hat-n_hat_start+1,n2-n2_start+1) = floor((R_1*mu_1*mu_tilda*c_2 + P_w*c_2*mu_1 - (P_2(n_hat-n_hat_start+1,n2-n2_start+1))*mu_tilda*c_2)/(P_w*mu_1));
+            [gamma, kappa, zeta] = findgamma(n1(n_hat-n_hat_start+1,n2-n2_start+1), n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
             %{ 
             disp(mu_tilda);
             disp(P_2);
@@ -180,13 +181,13 @@ for n_hat=n_hat_start:n_hat_start+n_hat_range-1
         utility_total(n_hat-n_hat_start+1,n2-n2_start+1) = findutility_n(n_hat, users(type_1_idx), lots(lot_1_idx));
 
         % Note: the utility below is incorrect?
-        p_k_n_2 = findp_k_n_2(n1, n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
+        p_k_n_2 = findp_k_n_2(n1(n_hat-n_hat_start+1,n2-n2_start+1), n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
         for i=1:n2
             utility_total(n_hat-n_hat_start+1,n2-n2_start+1)=utility_total(n_hat-n_hat_start+1,n2-n2_start+1)+(lambda_tilda)*(p_k_n_2(i))*...
                 (findalpha_tilda(i-1, mixed, lots(lot_2_idx), mu_tilda, gamma)); 
         end
-        % Note: alpha used below is not correct?        
-        for i=n2+1:n1
+        % Note: alpha used below is not correct?
+        for i=n2+1:n1(n_hat-n_hat_start+1,n2-n2_start+1)
             utility_total(n_hat-n_hat_start+1,n2-n2_start+1)=utility_total(n_hat-n_hat_start+1,n2-n2_start+1)+(delta*lambda_1)*(p_k_n_2(i))*...
                 (findalpha_12(i-1, users(type_1_idx), lots(lot_2_idx), mu_1));
         end
@@ -197,13 +198,16 @@ end
 [U_sw_total_max] = max(utility_total(:));
 [row, col] = find(utility_total == U_sw_total_max);
 P_2_max = P_2(row,col);
-%change P_1 to achieve n_b1 = n_hat
+n_hat_max = 
+n1_max = n1(row,col);
+n2_max = n2_start+col-1;
+%change P_1 to achieve n_b1 = n_hat*
 P_1 = floor((R*mu_1*c_1 +P_w*c_1-row*P_w)/c_1);
 figure(1);
 mesh(utility_total);
 
 %{
-figure(1);
+figure(2);
 bar(utility);
 title('Total expected utility vs n');
 ylabel('utility');
