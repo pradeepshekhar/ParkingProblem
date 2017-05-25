@@ -1,4 +1,4 @@
-function alpha = findalpha_12(k, user_params, lot_params, mu_tilda) 
+function alpha = findalpha_21(k, user_params, lot_params, mu_tilda) 
 
 c = lot_params.num_spots;
 R_1 = user_params.reward;

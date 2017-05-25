@@ -4,7 +4,7 @@
 % c2 spots for Type2 users (those with parking time > 1hr)
 % All prices are in $/hr
 
-%Defing all the parameters required to find social utility
+%Defining all the parameters required to find social utility
 c=30; %total no. of parking spots
 
 % parking spots in lot 1 and 2
@@ -16,14 +16,14 @@ assert(c == c_1+c_2);
 mu = 1/2;
 
 % mean service time of users in single-queue case
-T = 1/mu;
+T = 1;%/mu;
 
 % service rate for type 1 and 2 vehicles
 mu_1 = mu*(1-exp(-mu*T))/(1-exp(-mu*T)-mu*T*exp(-mu*T));
 mu_2 = mu/(1+mu*T);
 
 % arrivals in single queue (per hr)
-lambda = 60/5; 
+lambda = 60/5;
 
 % arrival rate of type 1 and 2 vehicles
 lambda_1 = lambda*(1-exp(-mu*T)); 
@@ -47,8 +47,8 @@ P_w = 48;
 
 % Reward for parking: single queue, Type1 and Type2
 R = 75;
-R_1 = R*lambda*(mu_2)/(lambda_1*mu_2+lambda_2*mu_1); % 75;
-R_2 = R*lambda*(mu_1)/(lambda_1*mu_2+lambda_2*mu_1); % 75;
+%R_1 = 50; R_2 = 100;
+R_1 = R*lambda*(mu_2)/(lambda_1*mu_2+lambda_2*mu_1); R_2 = R*lambda*(mu_1)/(lambda_1*mu_2+lambda_2*mu_1); 
 
 % Create for indexing structures
 type_1_idx = 1;
@@ -69,6 +69,8 @@ mixed = struct('reward_1',R_1,'reward_2',R_2,'waiting_cost', P_w); %note: implem
 users = [type_1, type_2, original];
 
 % Create an array of structures describing lots 1 and 2
+% Note - P, P_1 and P_2 are changed dynamically to get the required balking
+% level. So, why create a structure with them? 
 lot_1 = struct('num_spots', c_1, 'parking_cost', P_1);
 lot_2 = struct('num_spots', c_2, 'parking_cost', P_2);
 original = struct('num_spots', c, 'parking_cost', P);
@@ -139,19 +141,25 @@ n2=0;
 
 n_hat_start = 1;
 n2_start = 1;
-n_hat_range = 25;
-n2_range = 25;
+n_hat_range = 40;
+n2_range = 40;
 
 %Matrix to store uitilities for all options of (n_hat,n2)
 utility_total = zeros(n_hat_range+1,n2_range+1);
+utility_11 = zeros(n_hat_range+1,n2_range+1);
+utility_21 = zeros(n_hat_range+1,n2_range+1);
+utility_22 = zeros(n_hat_range+1,n2_range+1);
 P_2 = zeros(n_hat_range+1,n2_range+1);
 n1 = zeros(n_hat_range+1,n2_range+1);
 
 %Cycling through different pairs of (n_hat,n2) and finding utility
 for n_hat=n_hat_start:n_hat_start+n_hat_range
     for n2=n2_start:n2_start+n2_range
+        x = n_hat-n_hat_start+1;
+        y = n2-n2_start+1;
+        
         % resulting balking level of type 1 users at lot 2 (initial guess)
-        n1(n_hat-n_hat_start+1,n2-n2_start+1)=5;
+        n1(x,y)=5;
 
         %Delta found using n_hat
         delta = finddelta(n_hat, users(type_1_idx), lots(lot_1_idx));
@@ -164,11 +172,12 @@ for n_hat=n_hat_start:n_hat_start+n_hat_range
         for z=1:10
             
             mu_tilda = (mu_1*mu_2)/(gamma*mu_2 + (1-gamma)*mu_1);
-            P_2(n_hat-n_hat_start+1,n2-n2_start+1) = (R_2*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - n2*P_w*mu_2 )/(mu_tilda*c_2);
+            P_2(x,y) = (R_2*mu_2*mu_tilda*c_2 + P_w*mu_2*c_2 - n2*P_w*mu_2 )/(mu_tilda*c_2);
             %note: is n1 formulation correct? Observed n1<n2.. so no gain in utility!
-            n1(n_hat-n_hat_start+1,n2-n2_start+1) = floor((R_1*mu_1*c_2 + P_w*c_2 - (P_2(n_hat-n_hat_start+1,n2-n2_start+1))*c_2)/(P_w));
-            %n1(n_hat-n_hat_start+1,n2-n2_start+1) = floor((R_1*mu_1*mu_tilda*c_2 + P_w*c_2*mu_1 - (P_2(n_hat-n_hat_start+1,n2-n2_start+1))*mu_tilda*c_2)/(P_w*mu_1));
-            [gamma, kappa, zeta] = findgamma(n1(n_hat-n_hat_start+1,n2-n2_start+1), n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
+            n1(x,y) = floor((R_1*mu_tilda*c_2 + P_w*c_2 - (P_2(x,y))*c_2*mu_tilda)/(P_w));
+            %n1(x,y) = floor((R_1*mu_1*c_2 + P_w*c_2 - (P_2(x,y))*c_2)/(P_w));
+            %n1(x,y) = floor((R_1*mu_1*mu_tilda*c_2 + P_w*c_2*mu_1 - (P_2(x,y))*mu_tilda*c_2)/(P_w*mu_1));
+            [gamma, kappa, zeta] = findgamma(n1(x,y), n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
             %{ 
             disp(mu_tilda);
             disp(P_2);
@@ -178,31 +187,36 @@ for n_hat=n_hat_start:n_hat_start+n_hat_range
         end
 
         %total utility; first include total utility from lot 1
-        utility_total(n_hat-n_hat_start+1,n2-n2_start+1) = findutility_n(n_hat, users(type_1_idx), lots(lot_1_idx));
-
+        utility_total(x,y) = findutility_n(n_hat, users(type_1_idx), lots(lot_1_idx));
+        utility_11(x,y) = utility_total(x,y);
         % Note: the utility below is incorrect?
-        p_k_n_2 = findp_k_n_2(n1(n_hat-n_hat_start+1,n2-n2_start+1), n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
+        p_k_n_2 = findp_k_n_2(n1(x,y), n2, mu_tilda, delta, lambda_1, lambda_2, c_2);
         for i=1:n2
-            utility_total(n_hat-n_hat_start+1,n2-n2_start+1)=utility_total(n_hat-n_hat_start+1,n2-n2_start+1)+(lambda_tilda)*(p_k_n_2(i))*...
+            utility_total(x,y)=utility_total(x,y)+(lambda_tilda)*(p_k_n_2(i))*...
                 (findalpha_tilda(i-1, mixed, lots(lot_2_idx), mu_tilda, gamma)); 
         end
+        utility_22(x,y) = utility_total(x,y)-utility_11(x,y);
         % Note: alpha used below is not correct?
-        for i=n2+1:n1(n_hat-n_hat_start+1,n2-n2_start+1)
-            utility_total(n_hat-n_hat_start+1,n2-n2_start+1)=utility_total(n_hat-n_hat_start+1,n2-n2_start+1)+(delta*lambda_1)*(p_k_n_2(i))*...
-                (findalpha_12(i-1, users(type_1_idx), lots(lot_2_idx), mu_1));
+        for i=n2+1:n1(x,y)
+            utility_total(x,y)=utility_total(x,y)+(delta*lambda_1)*(p_k_n_2(i))*...
+                (findalpha_21(i-1, users(type_1_idx), lots(lot_2_idx), mu_tilda));
         end
+        utility_21(x,y) = utility_total(x,y)-utility_11(x,y)-utility_22(x,y);
         gamma=0;
     end
 end
 
 [U_sw_total_max] = max(utility_total(:));
 [row, col] = find(utility_total == U_sw_total_max);
+U_11_max = utility_11(row,col);
+U_21_max = utility_21(row,col);
+U_22_max = utility_22(row,col);
 P_2_max = P_2(row,col);
-n_hat_max = 
+n_hat_max = n_hat_start+row-1;
 n1_max = n1(row,col);
 n2_max = n2_start+col-1;
 %change P_1 to achieve n_b1 = n_hat*
-P_1 = floor((R*mu_1*c_1 +P_w*c_1-row*P_w)/c_1);
+P_1 = floor((R_1*mu_1*c_1 +P_w*c_1-n_hat_max*P_w)/c_1);
 figure(1);
 mesh(utility_total);
 
